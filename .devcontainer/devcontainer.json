@@ -1,0 +1,16 @@
+{
+	"name": "Default Linux Universal",
+	"image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+	"postCreateCommand": "bundler install",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"mhutchie.git-graph",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"DavidAnson.vscode-markdownlint",
+				"Shopify.ruby-lsp"
+			]
+		}
+	}
+}
