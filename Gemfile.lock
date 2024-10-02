@@ -2,9 +2,18 @@ GEM
   remote: https://rubygems.org/
   specs:
     ast (2.4.2)
+    bigdecimal (3.1.8)
+    csv (3.3.0)
     dotenv (3.1.2)
+    httparty (0.22.0)
+      csv
+      mini_mime (>= 1.0.0)
+      multi_xml (>= 0.5.2)
     json (2.7.2)
     language_server-protocol (3.17.0.3)
+    mini_mime (1.1.5)
+    multi_xml (0.7.1)
+      bigdecimal (~> 3.1)
     parallel (1.26.3)
     parser (3.3.4.2)
       ast (~> 2.4.1)
@@ -37,6 +46,7 @@ PLATFORMS
 
 DEPENDENCIES
   dotenv
+  httparty (~> 0.22.0)
   rubocop (~> 1.65)
 
 BUNDLED WITH
