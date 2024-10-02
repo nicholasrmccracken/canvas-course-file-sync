@@ -1,6 +1,6 @@
-# CarmenCards
+# CarmenCargo
 
-An application that allows students to create quizzes and flashcards directly from their course content in Canvas. Students can review material using interactive flashcards from the command line.
+A command-line tool that automates the download and organization of course files from Canvas. Students can always have the latest course materials neatly organized on their local machine, making file management effortless. With CarmenCargo, focus on learning while your course files are delivered directly to you!
 
 ## Table of Contents
 
@@ -28,21 +28,21 @@ Install all required gems by running the following command:
 
 3. **Obtain API Token:**
 First, create a copy of the ".env.template" file rename it ".env".  
-To utilize CarmenCards, you must acquire a Canvas REST API access token. Follow these steps:
+To utilize CarmenCargo, you must acquire a Canvas REST API access token. Follow these steps:
 
     1. Log into Carmen.
     2. Click on "Account" in the left-hand navigation bar.
     3. Select "Settings", then "New Access Token".
-    4. When prompted, enter a description for the token (e.g., "CarmenCards").
+    4. When prompted, enter a description for the token (e.g., "CarmenCargo").
     5. Click "Generate Token" and copy the displayed token.
     6. Paste this token into your .env file, replacing "CANVAS_TOKEN_SECRET".
 
 ## Usage
 
-To run CarmenCards locally, use the following command:
+To run CarmenCargo locally, use the following command:
 
 ```bash
-ruby lib/cli.rb
+ruby carmen_cargo.rb
 ```
 
 ## Contributing

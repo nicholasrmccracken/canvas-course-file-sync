@@ -2,12 +2,12 @@
 
 require 'httparty'
 
-module Carmen
+module CarmenCargo
   # The APIClient class is responsible for making HTTP requests to a given base URL.
   # It includes the HTTParty module, which provides a set of methods for performing HTTP requests.
   #
   # @example Creating a new APIClient
-  #   api_client = Carmen::APIClient.new('https://api.example.com', 'my_auth_token')
+  #   api_client = CarmenCargo::APIClient.new('https://api.example.com', 'my_auth_token')
   class APIClient
     include HTTParty
 
@@ -34,7 +34,7 @@ module Carmen
       page = 1
 
       loop do
-        response = fetch("#{endpoint}?page=#{page}", options)
+        response = fetch_response("#{endpoint}?page=#{page}", options)
         break if response.nil? || response.empty?
 
         all_results.concat(response)
