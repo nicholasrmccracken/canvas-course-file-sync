@@ -29,12 +29,12 @@ module Carmen
     # @param options [Hash] additional options for the GET request.
     # @return [Array<Hash, Array>] an array of the parsed responses from all pages of the GET request, or an empty
     #   array if the request fails.
-    def get(endpoint, options = {})
+    def fetch_paginated_response(endpoint, options = {})
       all_results = []
       page = 1
 
       loop do
-        response = get_page("#{endpoint}?page=#{page}", options)
+        response = fetch("#{endpoint}?page=#{page}", options)
         break if response.nil? || response.empty?
 
         all_results.concat(response)
@@ -44,8 +44,6 @@ module Carmen
       all_results
     end
 
-    private
-
     # Performs a GET request to a single page of the given endpoint and returns the parsed response.
     # If the request fails, it calls the handle_error method.
     #
@@ -53,13 +51,15 @@ module Carmen
     # @param options [Hash] additional options for the GET request.
     # @return [Hash, Array, nil] the parsed response from the GET request, or nil if the request fails.
     # @raise [HTTParty::Error] if an error occurs while making the GET request.
-    def get_page(endpoint, options = {})
+    def fetch_response(endpoint, options = {})
       response = self.class.get(endpoint, headers: @headers, **options)
 
       response.success? ? response.parsed_response : handle_error(endpoint, response)
     rescue HTTParty::Error => e
       puts "HTTParty Error: #{e.message}"
     end
+
+    private
 
     # Handles an error from a GET request by printing an error message.
     #
