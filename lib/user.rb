@@ -14,7 +14,7 @@ module CarmenCargo
     # @return [String] name of User
     # @return [String] email of User
     # @return [String] the token for authentication
-    attr_reader :name, :email, :token
+    attr_reader :token
 
     # Initialize a students data
     # Reads user token from .env file
@@ -64,20 +64,8 @@ module CarmenCargo
     # @param [Map] course lsit with names and id
     def print_user_classes(course_map)
       course_map.each do |class_name, class_id|
-        puts "Class Name:\n\t#{class_name},\n\tClass ID:#{class_id}"
+        puts "** Class Name: #{class_name}\n**\t\e[34mClass ID:#{class_id.to_s(16)}\e[0m\n\n"
       end
     end
   end
 end
-
-# test program displaying user info to consol
-# NOTE: to use user token when running use command "ruby lib/user.rb" within the proj3-cans directory
-user = CarmenCargo::User.new
-api_client = CarmenCargo::APIClient.new('https://canvas.instructure.com/api/v1', user.token)
-
-# map user info
-thumbprint = user.make_thumbprint(api_client)
-user.print_user_info(thumbprint)
-# map user classes
-course_map = user.get_user_classes(api_client)
-user.print_user_classes(course_map)

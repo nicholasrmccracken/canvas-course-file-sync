@@ -1,0 +1,13 @@
+if you're reading this then you must be a student at Ohio State with a Carmen access 
+token in their .env file. This program is designed to help you download files from 
+a given class on carmen. Youll be able to choose a course by its given ID number and 
+peek at the avalable files listed. If you wish to download them, indicate as such and 
+they will be saved in a zip on your device. Below is the list of classes you currently
+have access to on carmen. They are listed by their course name and the course ID value
+(displayed in HEX). 
+
+To peek at a courses files: enter a listed course ID (in HEX)
+To quit the program here: enter -1 
+TO see class list: enter -2
+
+ID/Action: 
