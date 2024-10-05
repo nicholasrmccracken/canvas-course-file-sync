@@ -67,5 +67,46 @@ module CarmenCargo
         puts "** Class Name: #{class_name}\n**\t\e[34mClass ID:#{class_id.to_s(16)}\e[0m\n\n"
       end
     end
+
+
+    # Updates the user token
+    #
+    # @param [String] new_token The new token to be set.
+    def update_token(new_token)
+      @token = new_token
+      ENV['TOKEN'] = new_token  # Also update the .env variable if necessary
+      puts "Token updated successfully."
+    end
+
+    # Validates the user by checking if the token is present
+    #
+    # @return [Boolean] true if valid, false otherwise
+    def valid_user?
+      !@token.nil? && !@token.empty?
+    end
+
+    # Fetches files for a given course ID
+    #
+    # @param [APIClient] api_client The API client for making requests
+    # @param [Integer] course_id The ID of the course to fetch files from
+    # @return [Array<Hash>] Array of file information
+    def fetch_course_files(api_client, course_id)
+      api_client.fetch_paginated_response("/courses/#{course_id}/files")
+    end
+
+    # Downloads a specific file by its ID
+    #
+    # @param [APIClient] api_client The API client for making requests
+    # @param [Integer] file_id The ID of the file to download
+    def download_file(api_client, file_id)
+      file_info = api_client.fetch_response("/files/#{file_id}")
+      if file_info && file_info['url']
+        # Replace this with your actual download implementation
+        puts "Downloading file: #{file_info['name']} from #{file_info['url']}"
+        # Add download logic here...
+      else
+        puts "Error: Unable to download file with ID #{file_id}."
+      end
+    end
   end
 end
