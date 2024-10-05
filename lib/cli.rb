@@ -31,6 +31,7 @@ module CarmenCargo
                   -2 => -> { user.print_user_classes(@course_map) } }
 
       loop do
+        puts "Please enter the course ID you would like to download files from, or enter -1 to exit, or -2 to view classes."
         course = gets.chomp.to_i(16)
         is_id = CarmenCargo.perform_action(actions, course)
         get_class_files(course) if is_id
@@ -43,10 +44,47 @@ module CarmenCargo
     def get_class_files(course_num)
       if @course_map.value?(course_num)
         # go download files
+        data_fetcher = CarmenCargo::DataFetcher.new('https://canvas.instructure.com/api/v1', user.token)
+        files = data_fetcher.course_files(course_num)
+
+        download_files(files) # Calls the method to handle file downloads
       else
         puts "the ID you entered is not one of the ones listed above.\n"
       end
     end
+
+    # Downloads files from the given array of file hashes.
+    #
+    # @param [Array<Hash>] files The array of file hashes to download.
+    def download_files(files)
+      files.each do |file|
+        # Logic for downloading file, e.g., save to a specific directory
+        puts "Downloading #{file['name']}..."
+        download_file(file) 
+      end
+      puts "Download completed."
+    end
+
+    # Downloads a file from the given file hash.
+    #
+    # @param [Hash] file The file hash containing information for the download.
+    def download_file(file)
+      file_url = file['url'] # Adjust this key based on the API response
+      file_name = file['name']
+      
+      uri = URI(file_url)
+      response = Net::HTTP.get_response(uri)
+
+      if response.is_a?(Net::HTTPSuccess)
+        File.open("downloads/#{file_name}", 'wb') do |f|
+          f.write(response.body)
+        end
+        puts "Downloaded #{file_name}."
+      else
+        puts "Failed to download #{file_name}: #{response.code} #{response.message}"
+      end
+    end
+
 
     # Exits the program with a goodbye message.
     def exit_program
