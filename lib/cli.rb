@@ -85,6 +85,21 @@ module CarmenCargo
       end
     end
 
+    # Zips the downloaded files and saves them in the downloads directory.
+    #
+    # @param [Array<String>] files The array of file names to zip.
+    def zip_files(files)
+      zip_file_name = "downloads/#{Time.now.strftime('%Y%m%d%H%M%S')}_downloads.zip"
+
+      Zip::File.open(zip_file_name, Zip::File::CREATE) do |zipfile|
+        files.each do |file_name|
+          zipfile.add(file_name, "downloads/#{file_name}")
+        end
+      end
+
+      puts "Created zip file: #{zip_file_name}"
+    end
+
 
     # Exits the program with a goodbye message.
     def exit_program
