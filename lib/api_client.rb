@@ -59,6 +59,21 @@ module CarmenCargo
       puts "HTTParty Error: #{e.message}"
     end
 
+    # Fetches all courses for the authenticated user.
+    #
+    # @return [Array<Hash>] an array of courses.
+    def get_courses
+      fetch_paginated_response('/courses')
+    end
+
+    # Fetches all files for a specific course.
+    #
+    # @param course_id [String] the ID of the course to fetch files from.
+    # @return [Array<Hash>] an array of files for the specified course.
+    def get_files(course_id)
+      fetch_paginated_response("/courses/#{course_id}/files")
+    end
+
     private
 
     # Handles an error from a GET request by printing an error message.

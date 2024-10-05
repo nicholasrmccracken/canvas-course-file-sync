@@ -3,6 +3,7 @@
 require_relative 'user'
 require_relative 'api_client'
 require_relative 'utils'
+require_relative 'data_fetcher'
 
 module CarmenCargo
   # class for handling command line issues
