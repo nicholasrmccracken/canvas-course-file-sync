@@ -4,6 +4,7 @@ require_relative 'user'
 require_relative 'api_client'
 require_relative 'utils'
 require_relative 'data_fetcher'
+require 'zip'
 
 module CarmenCargo
   # class for handling command line issues
@@ -97,9 +98,50 @@ module CarmenCargo
         end
       end
 
-      puts "Created zip file: #{zip_file_name}"
+      show_zip_download_info(zip_file_name) # Show zip file download info
     end
 
+    # Shows the user what files have been fetched
+    #
+    # @param fetched_files [Array<String>] The list of fetched files
+    def show_fetched_files(fetched_files)
+      puts "Fetched Files:"
+      if fetched_files.empty?
+        puts "No files have been fetched."
+      else
+        fetched_files.each do |file|
+          puts "- #{file}"
+        end
+      end
+    end
+
+    # Shows user the name and file path of the downloaded zip
+    #
+    # @param zip_file_path [String] The path of the downloaded zip file
+    def show_zip_download_info(zip_file_path)
+      puts "Your files have been zipped and downloaded to: #{zip_file_path}"
+    end
+
+    # Checks the file type of a given file
+    #
+    # @param file_path [String] The path of the file to check
+    # @return [String, nil] The file type if valid, nil otherwise
+    def check_file_type(file_path)
+      if File.exist?(file_path)
+        file_extension = File.extname(file_path)
+        valid_extensions = ['.pdf', '.docx', '.pptx', '.txt', '.csv'] # Add valid file types as needed
+
+        if valid_extensions.include?(file_extension)
+          return file_extension
+        else
+          puts "Invalid file type: #{file_extension}. Please select a valid file type."
+          return nil
+        end
+      else
+        puts "File does not exist at: #{file_path}"
+        return nil
+      end
+    end
 
     # Exits the program with a goodbye message.
     def exit_program
