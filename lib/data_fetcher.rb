@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'dotenv/load'
-require_relative('api_client')
+require_relative 'utils'
+require_relative 'api_client'
 
 module CarmenCargo
   # The DataFetcher class is responsible for fetching data from various endpoints of the API.
@@ -92,7 +92,7 @@ end
 
 # Test data fetcher
 if __FILE__ == $PROGRAM_NAME
-  data_fetcher = CarmenCargo::DataFetcher.new('https://osu.instructure.com/api/v1', ENV['CANVAS_TOKEN'])
+  data_fetcher = CarmenCargo::DataFetcher.new('https://osu.instructure.com/api/v1', CarmenCargo::CANVAS_TOKEN)
 
   user = data_fetcher.user
   puts user
@@ -102,6 +102,12 @@ if __FILE__ == $PROGRAM_NAME
   puts
   course_folders = data_fetcher.course_folders(courses[0]['id'])
   puts course_folders
+  puts
+  all_folders = data_fetcher.all_folders
+  all_folders.each do |folder|
+    puts folder['name']
+    puts folder['full_name']
+  end
   puts
   course_files = data_fetcher.course_files(courses[0]['id'])
   puts course_files

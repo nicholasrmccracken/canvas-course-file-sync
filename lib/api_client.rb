@@ -59,19 +59,19 @@ module CarmenCargo
       puts "HTTParty Error: #{e.message}"
     end
 
-    # Fetches all courses for the authenticated user.
+    # Fetches the content from a given URL by performing a GET request.
+    # If the request is successful, the response is returned. If the request fails,
+    # it calls the `handle_error` method.
     #
-    # @return [Array<Hash>] an array of courses.
-    def get_courses
-      fetch_paginated_response('/courses')
-    end
+    # @param file_url [String] The URL to fetch the content from.
+    # @return [HTTParty::Response, nil] The response from the GET request, or nil if the request fails.
+    # @raise [HTTParty::Error] If an error occurs while making the GET request.
+    def fetch_url(file_url)
+      response = HTTParty.get(file_url)
 
-    # Fetches all files for a specific course.
-    #
-    # @param course_id [String] the ID of the course to fetch files from.
-    # @return [Array<Hash>] an array of files for the specified course.
-    def get_files(course_id)
-      fetch_paginated_response("/courses/#{course_id}/files")
+      response.success? ? response : handle_error(endpoint, response)
+    rescue HTTParty::Error => e
+      puts "HTTParty Error: #{e.message}"
     end
 
     private
