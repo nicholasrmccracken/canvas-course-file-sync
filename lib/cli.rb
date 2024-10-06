@@ -32,7 +32,7 @@ module CarmenCargo
                   -2 => -> { user.print_user_classes(@course_map) } }
 
       loop do
-        puts "Please enter the course ID you would like to download files from, or enter -1 to exit, or -2 to view classes."
+        puts 'Please enter the course ID you would like to download files from, or enter -1 to exit, or -2 to view classes.'
         course = gets.chomp.to_i(16)
         is_id = CarmenCargo.perform_action(actions, course)
         get_class_files(course) if is_id
@@ -54,6 +54,29 @@ module CarmenCargo
       end
     end
 
+    # Prompt user for the output file path
+    def prompt_for_output_file_path
+      loop do
+        puts "\nEnter the output file path to save the downloaded file (or 'quit' to exit):"
+        path = gets.chomp
+
+        break if path.downcase == 'quit'
+
+        if valid_path?(path)
+          @output_path = path
+          puts "Output path set to: #{@output_path}"
+          break
+        else
+          puts 'Invalid path. Please try again.'
+        end
+      end
+    end
+
+    # Validate if the provided file path is valid
+    def valid_path?(path)
+      Dir.exist?(File.dirname(path))
+    end
+
     # Downloads files from the given array of file hashes.
     #
     # @param [Array<Hash>] files The array of file hashes to download.
@@ -61,9 +84,9 @@ module CarmenCargo
       files.each do |file|
         # Logic for downloading file, e.g., save to a specific directory
         puts "Downloading #{file['name']}..."
-        download_file(file) 
+        download_file(file)
       end
-      puts "Download completed."
+      puts 'Download completed.'
     end
 
     # Downloads a file from the given file hash.
@@ -72,7 +95,7 @@ module CarmenCargo
     def download_file(file)
       file_url = file['url'] # Adjust this key based on the API response
       file_name = file['name']
-      
+
       uri = URI(file_url)
       response = Net::HTTP.get_response(uri)
 
@@ -105,9 +128,9 @@ module CarmenCargo
     #
     # @param fetched_files [Array<String>] The list of fetched files
     def show_fetched_files(fetched_files)
-      puts "Fetched Files:"
+      puts 'Fetched Files:'
       if fetched_files.empty?
-        puts "No files have been fetched."
+        puts 'No files have been fetched.'
       else
         fetched_files.each do |file|
           puts "- #{file}"
@@ -131,15 +154,14 @@ module CarmenCargo
         file_extension = File.extname(file_path)
         valid_extensions = ['.pdf', '.docx', '.pptx', '.txt', '.csv'] # Add valid file types as needed
 
-        if valid_extensions.include?(file_extension)
-          return file_extension
-        else
-          puts "Invalid file type: #{file_extension}. Please select a valid file type."
-          return nil
-        end
+        return file_extension if valid_extensions.include?(file_extension)
+
+        puts "Invalid file type: #{file_extension}. Please select a valid file type."
+        nil
+
       else
         puts "File does not exist at: #{file_path}"
-        return nil
+        nil
       end
     end
 
