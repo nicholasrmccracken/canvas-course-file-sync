@@ -81,7 +81,9 @@ module CarmenCargo
     # @param endpoint [String] the endpoint where the GET request was made.
     # @param response [HTTParty::Response] the response from the GET request.
     def handle_error(endpoint, response)
-      puts "GET Request Error at #{endpoint}: #{response.code} - #{response.message}"
+      return if response.code == 404
+
+      puts "Error: #{response.code} - #{response.message} for endpoint #{endpoint}"
     end
   end
 end

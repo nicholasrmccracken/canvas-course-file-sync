@@ -36,13 +36,13 @@ module CarmenCargo
     desc 'ls', 'List the files in the current directory.'
     def ls
       if @path.empty?
-        list_item_names(@data_fetcher.active_courses, 'name')
+        list_item_names('Courses', @data_fetcher.active_courses, 'name')
       elsif @path.length == 1
-        list_item_names(@data_fetcher.course_folders(@curr_course_id), 'name')
-        list_item_names(@data_fetcher.course_files(@curr_course_id), 'display_name')
+        list_item_names('Course Files', @data_fetcher.course_files(@curr_course_id), 'display_name')
+        list_item_names('Course Folders', @data_fetcher.course_folders(@curr_course_id), 'name')
       else
-        list_item_names(@data_fetcher.child_folders(@curr_folder_id), 'name')
-        list_item_names(@data_fetcher.folder_files(@curr_folder_id), 'display_name')
+        list_item_names('Files', @data_fetcher.folder_files(@curr_folder_id), 'display_name')
+        list_item_names('Folders', @data_fetcher.child_folders(@curr_folder_id), 'name')
       end
     end
 
@@ -94,10 +94,12 @@ module CarmenCargo
     #
     # @param items [Array<Hash>] The items to list.
     # @param name [String] The key to use to get the name of each item.
-    def list_item_names(items, name)
+    def list_item_names(list_title, items, name)
+      puts "#{list_title}:"
       items.each do |item|
         puts "#{item['id']}: #{item[name]}"
       end
+      puts
     end
 
     # Resets the state of the CLI.
