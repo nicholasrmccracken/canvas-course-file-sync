@@ -9,6 +9,7 @@ require_relative 'file_manager'
 module CarmenCargo
   # CLI is a command-line interface for interacting with CarmenCargo.
   # It provides commands for navigating and downloading files.
+
   class CLI < Thor
     # Initializes a new instance of the CLI class.
     # It sets up a new DataFetcher instance and loads the state from a file if it exists.
@@ -55,7 +56,7 @@ module CarmenCargo
         reset_state
       elsif directory == '..'
         @path.pop unless @path.empty?
-      elsif valid_directory?(directory)
+      elsif (!@course_id && valid_course?(directory)) || valid_folder?(directory)
         @path.push(directory)
         update_current_path
       else
@@ -131,21 +132,26 @@ module CarmenCargo
       end
     end
 
-    # Checks if the given directory is valid.
+    # Checks if the given directory is a valid course.
     #
     # @param directory [String] The directory to check.
     # @return [Boolean] Returns true if the directory is valid, false otherwise.
-    def valid_directory?(directory)
-      course_ids = @data_fetcher.active_courses.map do |course|
-        course['id'].to_s
+    def valid_course?(directory)
+      active_courses = @data_fetcher.active_courses
+      active_courses.any? do |course|
+        course['id'].to_s == directory
       end
-      return course_ids.include?(directory) unless @course_id
+    end
 
-      folder_ids = @data_fetcher.course_folders(@curr_course_id).map do |folder|
-        folder['id'].to_s
+    # Checks if the given directory is a valid folder.
+    #
+    # @param directory [String] The directory to check.
+    # @return [Boolean] Returns true if the directory is valid, false otherwise.
+    def valid_folder?(directory)
+      course_folders = @data_fetcher.course_folders(@curr_course_id)
+      course_folders.any? do |course|
+        course['id'].to_s == directory
       end
-
-      course_ids.include?(directory) || folder_ids.include?(directory)
     end
   end
 end

@@ -31,7 +31,7 @@ module CarmenCargo
     # @param output_directory [String] The directory to download the file to.
     def download_file(data_fetcher, file, output_directory)
       file_name = file['display_name']
-      FileUtils.mkdir_p(File.dirname(output_directory))
+      FileUtils.mkdir_p(output_directory) unless Dir.exist?(output_directory)
       output_path = File.join(output_directory, file_name)
 
       response = data_fetcher.fetch_url(file['url'])
