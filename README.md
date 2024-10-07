@@ -9,6 +9,7 @@ A command-line tool that automates the download and organization of course files
 - [Contributing](#contributing)
   - [Yard Documentation](#yard-documenation)
   - [Developer Style Guidelines](#developer-style-guidelines)
+- [Testing](#testing)
 - [Individual Contributions](#individual-contributions)
 
 ## Installation
@@ -50,14 +51,14 @@ To utilize CarmenCargo, you must acquire a Canvas REST API access token. Follow 
 The CarmenCargo CLI tool has three commands:
 
 1. **LS:**  
-List the current files and folders.
+List the current files and folders, with folder ids for each folder.
 
     ```bash
     ./carmen_cargo.rb ls
     ```
 
 2. **CD:**  
-Change the current directory. Use ".." to move up one level, or "/" to go back to the root.
+Change the current directory. Use ".." to move up one level, or "/" to go back to the root, or a folder id value to move into that folder.
 
     ```bash
     ./carmen_cargo.rb cd DIRECTORY
@@ -109,6 +110,14 @@ open doc/index.html
   - 'Add', 'Implement', 'Fix'
 - Body copy must only contain what and why explanations, never how. The how should be in documentation.
 
+## Testing
+
+Test the validity of your Canvas REST API access token by running the following command:
+
+```bash
+ruby lib/data_fetcher.rb
+```
+
 ## Individual Contributions
 
 **Aysha:**  
@@ -121,8 +130,7 @@ open doc/index.html
 - Created user class for token checking and verification. Has some unused methods for displaying user information that was fased out in the final project. Currently used when no token can be found in the .env file. It takes the user to a sub method where they can enter a CANVAS_TOKEN in the command line. The class will save it to the .env for later use.
 - Reformatted output and error messages for organization and ease of reading: success tags are greeen, files are blue, locations (partial or final) are teal
 - Did small ammounts of error testing after largest merge and program integration. There was a point where we had a full program but it was (more or less) split into two halves. After integration there were some errors we all contributed to fixing
-- Inital project idea: Before we decided what our final project would be, we had an idea to make a flashcard generator. Before it was scrapped some code was written. The User class still contains some reminents of the old project but some has also been deleted. 
-
+- Inital project idea: Before we decided what our final project would be, we had an idea to make a flashcard generator. Before it was scrapped some code was written. The User class still contains some reminents of the old project but some has also been deleted.
 
 **Nicholas:**  
 
