@@ -123,6 +123,7 @@ open doc/index.html
 - Did small ammounts of error testing after largest merge and program integration. There was a point where we had a full program but it was (more or less) split into two halves. After integration there were some errors we all contributed to fixing
 - Inital project idea: Before we decided what our final project would be, we had an idea to make a flashcard generator. Before it was scrapped some code was written. The User class still contains some reminents of the old project but some has also been deleted. 
 
+
 **Nicholas:**  
 
 - Implemented APIClient class
