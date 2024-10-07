@@ -7,6 +7,7 @@ A command-line tool that automates the download and organization of course files
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
+  - [Yard Documentation](#yard-documenation)
   - [Developer Style Guidelines](#developer-style-guidelines)
 - [Individual Contributions](#individual-contributions)
 
@@ -69,7 +70,7 @@ Download the files in the current course or folder to a specified directory. If 
     ./carmen_cargo.rb download [OUTPUT_DIRECTORY] [EXTENSIONS]
     ```
 
-To get the descriptions of each command programmatically, you can run CarmenCargo without any arguments:
+View the descriptions of each command in the terminal by running CarmenCargo without any arguments:
 
 ```bash
 ./carmen_cargo.rb
@@ -77,8 +78,9 @@ To get the descriptions of each command programmatically, you can run CarmenCarg
 
 ## Contributing
 
-**Yard Documenation:**
-To view yard documentation in html form:
+### Yard Documenation
+
+View the yard documentation in html form by running the following commands:
 
 ```bash
 yard doc
@@ -109,10 +111,23 @@ open doc/index.html
 
 ## Individual Contributions
 
-**Aysha:**
+**Aysha:**  
 
-**Christopher:**
+-
 
-**Nicholas:**
+**Christopher:**  
 
-**Sanju:**
+-
+
+**Nicholas:**  
+
+- Implemented APIClient class
+- Implemented DataFetcher class
+- Refactored CLI to connected frontend and backend with Thor commands
+- Implemented state management in CLI with json file
+- Added additional features like extension filtering and defaulting to downloads folder when downloading
+- Structured README
+
+**Sanju:**  
+
+-

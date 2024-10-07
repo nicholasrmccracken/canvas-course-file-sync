@@ -8,12 +8,12 @@ state.json
 .yarddoc
 doc
 
-.pdf
-.pptx
-.docx
-.xls
-.xlsx
-.mp3
-.mp4
-.mov
-.zip
+*.pdf
+*.pptx
+*.docx
+*.xls
+*.xlsx
+*.mp3
+*.mp4
+*.mov
+*.zip
