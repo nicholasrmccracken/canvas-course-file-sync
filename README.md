@@ -143,4 +143,11 @@ ruby lib/data_fetcher.rb
 
 **Sanju:**  
 
--
+- Contributions mostly made in old version
+- Logic for handling API rate limiting by implementing retry logic
+- Cache file metadata logic
+- In CLI class, implemented logic to show user what files have been fetched
+- Updated user token and validate token access logic in CLI class
+- Logic to zip fetched files
+- Implemented error handling forf API calls in user class
+- Added tasks to be implemented for old versions of CLI and User classes in design document
