@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'mime/types'
 require 'zip'
 
 module CarmenCargo
@@ -43,6 +44,17 @@ module CarmenCargo
       puts "\tFile: \e[34m#{file_name}\e[0m\n\tLocation: \e[0m\e[36m#{output_path}\e[0m\n\n"
     rescue StandardError => e
       puts "Failed to download \e[31m#{file_name}\e[0m: #{e.message}"
+    end
+
+    # Maps file extensions to their corresponding MIME types.
+    #
+    # @param extensions [Array<String>] An array of file extensions.
+    # @return [Array<String>] An array of MIME types corresponding to the input extensions.
+    def map_extension_to_mime_type(extensions)
+      extensions.map do |extension|
+        mime_type = MIME::Types.type_for(extension).first
+        mime_type&.content_type
+      end.compact
     end
 
     # Untested Methods;

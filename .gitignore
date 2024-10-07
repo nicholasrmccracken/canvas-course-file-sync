@@ -1,5 +1,19 @@
 # Used by dotenv library to load environment variables.
 .env
+
+# Stores user's individual program state
 state.json
+
+# Yard documentation
 .yarddoc
 doc
+
+.pdf
+.pptx
+.docx
+.xls
+.xlsx
+.mp3
+.mp4
+.mov
+.zip

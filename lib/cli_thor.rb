@@ -9,7 +9,6 @@ require_relative 'file_manager'
 module CarmenCargo
   # CLI is a command-line interface for interacting with CarmenCargo.
   # It provides commands for navigating and downloading files.
-
   class CLI < Thor
     # Initializes a new instance of the CLI class.
     # It sets up a new DataFetcher instance and loads the state from a file if it exists.
@@ -33,16 +32,16 @@ module CarmenCargo
     end
 
     # Lists the contents of the current directory.
-    desc 'ls', 'List the files in the current directory.'
+    desc 'ls', 'List the contents in the current directory.'
     def ls
       if @path.empty?
-        list_item_names('Courses', @data_fetcher.active_courses, 'name')
+        list_folder_names(@data_fetcher.active_courses)
       elsif @path.length == 1
-        list_item_names('Course Files', @data_fetcher.course_files(@curr_course_id), 'display_name')
-        list_item_names('Course Folders', @data_fetcher.course_folders(@curr_course_id), 'name')
+        list_file_names(@data_fetcher.course_files(@curr_course_id))
+        list_folder_names(@data_fetcher.course_folders(@curr_course_id))
       else
-        list_item_names('Files', @data_fetcher.folder_files(@curr_folder_id), 'display_name')
-        list_item_names('Folders', @data_fetcher.child_folders(@curr_folder_id), 'name')
+        list_file_names(@data_fetcher.folder_files(@curr_folder_id))
+        list_folder_names(@data_fetcher.child_folders(@curr_folder_id))
       end
     end
 
@@ -67,19 +66,19 @@ module CarmenCargo
 
     # Downloads the files in the current course or folder to a specified directory.
     #
-    # @param output_directory [String] The directory to download the files to. Defaults to the value of user's downloads
-    #   folder.
-    # @param types [Array<String>] The types of files to download.
+    # @param output_directory [String] The directory to download the files to. Defaults to the user's downloads folder.
+    # @param types [Array<String>] The extensions of files to download.
     # @return [void]
-    desc 'download [OUTPUT_DIRECTORY] [TYPES]', 'Download the files in the current course or folder to a specified
+    desc 'download [OUTPUT_DIRECTORY] [EXTENSIONS]', 'Download the files in the current course or folder to a specified
     directory. If no directory is specified, files are downloaded to the default downloads folder. Optionally, specify
-    file types to filter which files are downloaded.'
-    def download(output_directory = @file_manager.downloads_folder, *types)
+    file extensions to filter which files are downloaded.'
+    def download(output_directory = @file_manager.downloads_folder, *extensions)
+      extensions = @file_manager.map_extension_to_mime_type(extensions)
       files = []
       if @curr_folder_id
-        files = @data_fetcher.folder_files(@curr_folder_id, types)
+        files = @data_fetcher.folder_files(@curr_folder_id, extensions)
       elsif @curr_course_id
-        files = @data_fetcher.course_files(@curr_course_id, types)
+        files = @data_fetcher.course_files(@curr_course_id, extensions)
       end
 
       files.each do |file|
@@ -90,14 +89,24 @@ module CarmenCargo
 
     private
 
-    # Lists the names of the given items.
+    # Lists the names of the given folders.
     #
-    # @param items [Array<Hash>] The items to list.
-    # @param name [String] The key to use to get the name of each item.
-    def list_item_names(list_title, items, name)
-      puts "#{list_title} - "
-      items.each_with_index do |item, n|
-        puts "#{n + 1}: \e[34m#{item[name]}\e[0m\n\t\e[36m#{item['id']}\e[0m\n"
+    # @param folders [Array<Hash>] The folders to list.
+    def list_folder_names(folders)
+      puts 'Folders:'
+      folders.each do |folder|
+        puts "#{folder['id']}: #{folder['name']}"
+      end
+      puts
+    end
+
+    # Lists the names of the given files.
+    #
+    # @param files [Array<Hash>] The files to list.
+    def list_file_names(files)
+      puts 'Files:'
+      files.each do |file|
+        puts file['display_name']
       end
       puts
     end
