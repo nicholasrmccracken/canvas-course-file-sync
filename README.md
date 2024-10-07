@@ -99,6 +99,13 @@ To get the descriptions of each command programmatically, you can run CarmenCarg
   - 'Add', 'Implement', 'Fix'
 - Body copy must only contain what and why explanations, never how. The how should be in documentation.
 
+**Yard Documenation**:
+To view yard documentation in html form:
+```bash
+yard doc
+open doc/index.html
+```
+
 ## Individual Contributions
 
 **Aysha**:
