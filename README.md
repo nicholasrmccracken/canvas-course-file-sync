@@ -122,7 +122,11 @@ ruby lib/data_fetcher.rb
 
 **Aysha:**  
 
--
+- Created methods for viewing files/folders/courses
+- Created initial methods for looping and getting user selection of file/folder/course; later refactored to command line functionality
+- Implemented initial FileManager class
+- Aided in final documentation (yard doc)
+- Added error handling for viewing and user selection methods
 
 **Christopher:**  
 
