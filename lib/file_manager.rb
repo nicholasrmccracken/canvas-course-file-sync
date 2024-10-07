@@ -87,32 +87,5 @@ module CarmenCargo
         mime_type&.content_type
       end.compact
     end
-
-    # Untested and Unused Methods;
-
-    # Zips the downloaded files and saves them in the downloads directory.
-    #
-    # @param [Array<String>] files The array of file names to zip.
-    def zip_files(files)
-      zip_file_name = "downloads/#{Time.now.strftime('%Y%m%d%H%M%S')}_downloads.zip"
-
-      Zip::File.open(zip_file_name, Zip::File::CREATE) do |zipfile|
-        files.each do |file_name|
-          zipfile.add(file_name, "downloads/#{file_name}")
-        end
-      end
-
-      puts "Your files have been zipped and downloaded to: #{zip_file_path}"
-    end
-
-    def zip_multiple_files(data_fetcher, files, zipfile_name)
-      Zip::File.open(zipfile_name, Zip::File::CREATE) do |zipfile|
-        files.each do |file|
-          puts "Downloading \e[34m#{file['display_name']}\e[0m..."
-          download_individual_file(data_fetcher, file, output_directory)
-          zipfile.add(file_name, "downloads/#{file_name}")
-        end
-      end
-    end
   end
 end
