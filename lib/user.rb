@@ -22,7 +22,13 @@ module CarmenCargo
     # @param [String] user first name
     # @param [String] user email
     def initialize
-      @token = ENV['TOKEN']
+      @token = ENV['CANVAS_TOKEN']
+      return if valid_user?
+
+      puts 'we seem to have lost your token'
+      puts 'enter a new one from carmen to add it to your .env file'
+
+      update_token
     end
 
     # Creates a Map with users name and given id number
@@ -68,14 +74,38 @@ module CarmenCargo
       end
     end
 
-
     # Updates the user token
     #
     # @param [String] new_token The new token to be set.
-    def update_token(new_token)
+    def update_token
+      new_token = gets.chomp.to_s
       @token = new_token
-      ENV['TOKEN'] = new_token  # Also update the .env variable if necessary
-      puts "Token updated successfully."
+      ENV['TOKEN'] = new_token # Also update the .env variable if necessary
+      update_env_file(new_token)
+      puts 'Token updated successfully.'
+    end
+
+    def update_env_file(new_token)
+      env_file_path = '.env'
+      lines = File.readlines(env_file_path)
+
+      # Prepare the content to write
+      updated_lines = lines.map do |line|
+        if line.start_with?('CANVAS_TOKEN=')
+          "CANVAS_TOKEN=#{new_token}"
+        else
+          line.strip # Remove any existing newlines
+        end
+      end
+
+      # Open the .env file for writing
+      File.open(env_file_path, 'w') do |file|
+        # Write all lines, but only append a newline to each except the last one
+        updated_lines[0...-1].each do |line|
+          file.puts(line)
+        end
+        file.print(updated_lines.last) # No newline after the last line
+      end
     end
 
     # Validates the user by checking if the token is present

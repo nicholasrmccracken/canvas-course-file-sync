@@ -5,6 +5,7 @@ require 'json'
 require_relative 'utils'
 require_relative 'data_fetcher'
 require_relative 'file_manager'
+require_relative 'user'
 
 module CarmenCargo
   # CLI is a command-line interface for interacting with CarmenCargo.
@@ -16,6 +17,7 @@ module CarmenCargo
     # default values.
     def initialize(*args)
       super
+      @user = CarmenCargo::User.new
       @data_fetcher = DataFetcher.new('https://canvas.instructure.com/api/v1', CarmenCargo::CANVAS_TOKEN)
       @file_manager = FileManager.new
 
