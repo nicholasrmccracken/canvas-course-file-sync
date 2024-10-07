@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'mime/types'
 require 'zip'
 
 module CarmenCargo
@@ -25,67 +26,66 @@ module CarmenCargo
                           end
     end
 
-    # Downloads a file from the given file hash.
+    # Returns the output path for a file.
     #
-    # @param file [Hash] The file hash containing information for the download.
-    # @param output_directory [String] The directory to download the file to.
-    def download_file(data_fetcher, file, output_directory)
-      file_name = file['display_name']
+    # @param output_directory [String] The directory to output the file to.
+    # @param file_name [String] The name of the file.
+    # @return [String] The output path for the file.
+    def output_path(output_directory, file_name)
       FileUtils.mkdir_p(output_directory) unless Dir.exist?(output_directory)
-      output_path = File.join(output_directory, file_name)
+      File.join(output_directory, file_name)
+    end
 
-      response = data_fetcher.fetch_url(file['url'])
-
+    # Writes the response body to a file.
+    #
+    # @param output_path [String] The path to the output file.
+    # @param response [Object] The response object containing the body to write to the file.
+    def write_response_to_file(output_path, response)
       File.open(output_path, 'wb') do |output_file|
         output_file.write(response.body)
       end
-      puts "#{file_name} downloaded to #{output_path}"
+    end
+
+    # Downloads a file from the given file hash.
+    #
+    # @param data_fetcher [Object] The object responsible for fetching the file data.
+    # @param file [Hash] The file hash containing information for the download.
+    # @param output_directory [String] The directory to download the file to.
+    def download_individual_file(data_fetcher, file, output_directory)
+      file_name = file['display_name']
+
+      output_path = output_path(output_directory, file_name)
+      response = data_fetcher.fetch_url(file['url'])
+
+      write_response_to_file(output_path, response)
+
+      puts "\e[32mDownload success!\e[0m"
+      puts "\tFile: \e[34m#{file_name}\e[0m\n\tLocation: \e[0m\e[36m#{output_path}\e[0m\n\n"
     rescue StandardError => e
-      puts "Failed to download #{file_name}: #{e.message}"
+      puts "Failed to download \e[31m#{file_name}\e[0m: #{e.message}"
     end
 
-    # Untested Methods;
-
-    # Zips the downloaded files and saves them in the downloads directory.
+    # Downloads multiple files.
     #
-    # @param [Array<String>] files The array of file names to zip.
-    def zip_files(files)
-      zip_file_name = "downloads/#{Time.now.strftime('%Y%m%d%H%M%S')}_downloads.zip"
-
-      Zip::File.open(zip_file_name, Zip::File::CREATE) do |zipfile|
-        files.each do |file_name|
-          zipfile.add(file_name, "downloads/#{file_name}")
-        end
+    # @param data_fetcher [Object] The object responsible for fetching the file data.
+    # @param files [Array<Hash>] An array of file hashes containing information for the downloads.
+    # @param output_directory [String] The directory to download the files to.
+    def download_multiple_files(data_fetcher, files, output_directory)
+      files.each do |file|
+        puts "Downloading \e[34m#{file['display_name']}\e[0m..."
+        download_individual_file(data_fetcher, file, output_directory)
       end
-
-      show_zip_download_info(zip_file_name) # Show zip file download info
     end
 
-    # Shows user the name and file path of the downloaded zip
+    # Maps file extensions to their corresponding MIME types.
     #
-    # @param zip_file_path [String] The path of the downloaded zip file
-    def show_zip_download_info(zip_file_path)
-      puts "Your files have been zipped and downloaded to: #{zip_file_path}"
-    end
-
-    # Checks the file type of a given file
-    #
-    # @param file_path [String] The path of the file to check
-    # @return [String, nil] The file type if valid, nil otherwise
-    def check_file_type(file_path)
-      if File.exist?(file_path)
-        file_extension = File.extname(file_path)
-        valid_extensions = ['.pdf', '.docx', '.pptx', '.txt', '.csv'] # Add valid file types as needed
-
-        return file_extension if valid_extensions.include?(file_extension)
-
-        puts "Invalid file type: #{file_extension}. Please select a valid file type."
-        nil
-
-      else
-        puts "File does not exist at: #{file_path}"
-        nil
-      end
+    # @param extensions [Array<String>] An array of file extensions.
+    # @return [Array<String>] An array of MIME types corresponding to the input extensions.
+    def map_extension_to_mime_type(extensions)
+      extensions.map do |extension|
+        mime_type = MIME::Types.type_for(extension).first
+        mime_type&.content_type
+      end.compact
     end
   end
 end
