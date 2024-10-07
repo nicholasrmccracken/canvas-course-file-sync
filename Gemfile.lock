@@ -44,6 +44,7 @@ GEM
     ruby-progressbar (1.13.0)
     strscan (3.1.0)
     unicode-display_width (2.5.0)
+    yard (0.9.37)
 
 PLATFORMS
   ruby
@@ -54,6 +55,7 @@ DEPENDENCIES
   httparty (~> 0.22.0)
   mime-types (~> 3.6)
   rubocop (~> 1.65)
+  yard (~> 0.9.37)
 
 BUNDLED WITH
    2.5.11

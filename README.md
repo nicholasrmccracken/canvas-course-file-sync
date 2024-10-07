@@ -7,6 +7,7 @@ A command-line tool that automates the download and organization of course files
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
+  - [Yard Documentation](#yard-documenation)
   - [Developer Style Guidelines](#developer-style-guidelines)
 - [Individual Contributions](#individual-contributions)
 
@@ -69,7 +70,7 @@ Download the files in the current course or folder to a specified directory. If 
     ./carmen_cargo.rb download [OUTPUT_DIRECTORY] [EXTENSIONS]
     ```
 
-To get the descriptions of each command programmatically, you can run CarmenCargo without any arguments:
+View the descriptions of each command in the terminal by running CarmenCargo without any arguments:
 
 ```bash
 ./carmen_cargo.rb
@@ -77,8 +78,9 @@ To get the descriptions of each command programmatically, you can run CarmenCarg
 
 ## Contributing
 
-**Yard Documenation:**
-To view yard documentation in html form:
+### Yard Documenation
+
+View the yard documentation in html form by running the following commands:
 
 ```bash
 yard doc
@@ -109,9 +111,11 @@ open doc/index.html
 
 ## Individual Contributions
 
-**Aysha:**
+**Aysha:**  
 
-**Christopher:**
+-
+
+**Christopher:**  
 
 - Created initial cli class to handle initial boot up and user check. Mapped user class and ID values displaying them to the user as initial directory.
 - Created user class for token checking and verification. Has some unused methods for displaying user information that was fased out in the final project. Currently used when no token can be found in the .env file. It takes the user to a sub method where they can enter a CANVAS_TOKEN in the command line. The class will save it to the .env for later use.
@@ -119,6 +123,15 @@ open doc/index.html
 - Did small ammounts of error testing after largest merge and program integration. There was a point where we had a full program but it was (more or less) split into two halves. After integration there were some errors we all contributed to fixing
 - Inital project idea: Before we decided what our final project would be, we had an idea to make a flashcard generator. Before it was scrapped some code was written. The User class still contains some reminents of the old project but some has also been deleted. 
 
-**Nicholas:**
+**Nicholas:**  
 
-**Sanju:**
+- Implemented APIClient class
+- Implemented DataFetcher class
+- Refactored CLI to connected frontend and backend with Thor commands
+- Implemented state management in CLI with json file
+- Added additional features like extension filtering and defaulting to downloads folder when downloading
+- Structured README
+
+**Sanju:**  
+
+-
