@@ -77,6 +77,14 @@ To get the descriptions of each command programmatically, you can run CarmenCarg
 
 ## Contributing
 
+**Yard Documenation**:
+To view yard documentation in html form:
+
+```bash
+yard doc
+open doc/index.html
+```
+
 ### Developer Style Guidelines
 
 **Code Style:**

@@ -4,6 +4,10 @@
 # Stores user's individual program state
 state.json
 
+# Yard documentation
+.yarddoc
+doc
+
 .pdf
 .pptx
 .docx
