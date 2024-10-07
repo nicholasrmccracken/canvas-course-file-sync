@@ -113,6 +113,12 @@ open doc/index.html
 
 **Christopher:**
 
+- Created initial cli class to handle initial boot up and user check. Mapped user class and ID values displaying them to the user as initial directory.
+- Created user class for token checking and verification. Has some unused methods for displaying user information that was fased out in the final project. Currently used when no token can be found in the .env file. It takes the user to a sub method where they can enter a CANVAS_TOKEN in the command line. The class will save it to the .env for later use.
+- Reformatted output and error messages for organization and ease of reading: success tags are greeen, files are blue, locations (partial or final) are teal
+- Did small ammounts of error testing after largest merge and program integration. There was a point where we had a full program but it was (more or less) split into two halves. After integration there were some errors we all contributed to fixing
+- Inital project idea: Before we decided what our final project would be, we had an idea to make a flashcard generator. Before it was scrapped some code was written. The User class still contains some reminents of the old project but some has also been deleted. 
+
 **Nicholas:**
 
 **Sanju:**
