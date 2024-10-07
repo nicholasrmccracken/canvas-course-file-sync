@@ -39,9 +39,10 @@ module CarmenCargo
       File.open(output_path, 'wb') do |output_file|
         output_file.write(response.body)
       end
-      puts "#{file_name} downloaded to #{output_path}"
+      puts "\e[32mDownload success!\e[0m"
+      puts "\tFile: \e[34m#{file_name}\e[0m\n\tLocation: \e[0m\e[36m#{output_path}\e[0m\n\n"
     rescue StandardError => e
-      puts "Failed to download #{file_name}: #{e.message}"
+      puts "Failed to download \e[31m#{file_name}\e[0m: #{e.message}"
     end
 
     # Untested Methods;

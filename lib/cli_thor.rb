@@ -60,7 +60,7 @@ module CarmenCargo
         @path.push(directory)
         update_current_path
       else
-        puts 'Invalid directory name.'
+        puts "\e[31mWarning error thrown\e[0m: you listed a non existent directory (\e[31m#{directory}\e[0m)"
       end
       save_state
     end
@@ -83,7 +83,7 @@ module CarmenCargo
       end
 
       files.each do |file|
-        puts "Downloading #{file['display_name']}..."
+        puts "Downloading \e[34m#{file['display_name']}\e[0m..."
         @file_manager.download_file(@data_fetcher, file, output_directory)
       end
     end
@@ -95,9 +95,9 @@ module CarmenCargo
     # @param items [Array<Hash>] The items to list.
     # @param name [String] The key to use to get the name of each item.
     def list_item_names(list_title, items, name)
-      puts "#{list_title}:"
-      items.each do |item|
-        puts "#{item['id']}: #{item[name]}"
+      puts "#{list_title} - "
+      items.each_with_index do |item, n|
+        puts "#{n + 1}: \e[34m#{item[name]}\e[0m\n\t\e[36m#{item['id']}\e[0m\n"
       end
       puts
     end
