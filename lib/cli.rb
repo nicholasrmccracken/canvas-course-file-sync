@@ -3,9 +3,9 @@
 require 'thor'
 require 'json'
 require_relative 'utils'
-require_relative 'data_fetcher'
+require_relative 'state_manager'
 require_relative 'file_manager'
-require_relative 'user'
+require_relative 'data_fetcher'
 
 module CarmenCargo
   # CLI is a command-line interface for interacting with CarmenCargo.
@@ -17,24 +17,22 @@ module CarmenCargo
     # default values.
     def initialize(*args)
       super
-      @user = CarmenCargo::User.new
-      @data_fetcher = DataFetcher.new('https://canvas.instructure.com/api/v1', CarmenCargo::CANVAS_TOKEN)
+      @state_manager = StateManager.new
       @file_manager = FileManager.new
+      @data_fetcher = DataFetcher.new('https://canvas.instructure.com/api/v1', CarmenCargo::CANVAS_TOKEN)
 
-      load_state
+      @state_manager.load_state
     end
 
     # Lists the contents of the current directory.
     desc 'ls', 'List the contents in the current directory.'
     def ls
-      if @path.empty?
-        list_folder_names(@data_fetcher.active_courses)
-      elsif @path.length == 1
-        list_file_names(@data_fetcher.course_files(@curr_course_id))
-        list_folder_names(@data_fetcher.course_folders(@curr_course_id))
+      if @state_manager.path.empty?
+        list_active_courses
+      elsif @state_manager.path.length == 1
+        list_course_contents
       else
-        list_file_names(@data_fetcher.folder_files(@curr_folder_id))
-        list_folder_names(@data_fetcher.child_folders(@curr_folder_id))
+        list_folder_contents
       end
     end
 
@@ -45,30 +43,30 @@ module CarmenCargo
     the root.'
     def cd(directory)
       if directory == '/'
-        reset_state
+        @state_manager.reset_state
       elsif directory == '..'
         move_up_directory
       else
         move_down_directory(directory)
       end
-      save_state
+      @state_manager.save_state
     end
 
     # Downloads the files in the current course or folder to a specified directory.
     #
-    # @param output_directory [String] The directory to download the files to. Defaults to the user's downloads folder.
+    # @param output_directory [String] The directory to download the files to.
+    #   Defaults to the user's downloads folder.
     # @param types [Array<String>] The extensions of files to download.
-    # @return [void]
     desc 'download [OUTPUT_DIRECTORY] [EXTENSIONS]', 'Download the files in the current course or folder to a specified
     directory. If no directory is specified, files are downloaded to the default downloads folder. Optionally, specify
     file extensions to filter which files are downloaded.'
     def download(output_directory = @file_manager.downloads_folder, *extensions)
       extensions = @file_manager.map_extension_to_mime_type(extensions)
       files = []
-      if @curr_folder_id
-        files = @data_fetcher.folder_files(@curr_folder_id, extensions)
-      elsif @curr_course_id
-        files = @data_fetcher.course_files(@curr_course_id, extensions)
+      if @state_manager.curr_folder_id
+        files = @data_fetcher.folder_files(@state_manager.curr_folder_id, extensions)
+      elsif @state_manager.curr_course_id
+        files = @data_fetcher.course_files(@state_manager.curr_course_id, extensions)
       end
 
       @file_manager.download_multiple_files(@data_fetcher, files, output_directory)
@@ -76,56 +74,9 @@ module CarmenCargo
 
     private
 
-    # Loads the state from the 'state.json' file.
-    # If the file does not exist, initializes the state to its default values.
-    def load_state
-      if File.exist?('state.json')
-        state = JSON.parse(File.read('state.json'))
-        @path = state['path']
-        @curr_course_id = state['curr_course_id']
-        @curr_folder_id = state['curr_folder_id']
-      else
-        @path = []
-        @curr_course_id = nil
-        @curr_folder_id = nil
-      end
-    end
-
-    # Resets the state of the CLI.
-    def reset_state
-      @path = []
-      @curr_course_id = nil
-      @curr_folder_id = nil
-      save_state
-    end
-
-    # Saves the current state of the CLI to a file.
-    def save_state
-      state = {
-        'path' => @path,
-        'curr_course_id' => @curr_course_id,
-        'curr_folder_id' => @curr_folder_id
-      }
-      File.write('state.json', state.to_json)
-    end
-
-    # Updates the current path based on the state of the CLI.
-    def update_current_path
-      if @path.empty?
-        @curr_course_id = nil
-        @curr_folder_id = nil
-      elsif @path.length == 1
-        @curr_course_id = @path[0]
-        @curr_folder_id = nil
-      else
-        @curr_course_id = @path[0]
-        @curr_folder_id = @path[-1]
-      end
-    end
-
     # Moves up one directory level by removing the last directory from the path.
     def move_up_directory
-      @path.pop unless @path.empty?
+      @state_manager.path.pop unless @state_manager.path.empty?
     end
 
     # Moves down to a new directory by adding it to the path.
@@ -133,8 +84,8 @@ module CarmenCargo
     # @param directory [String] The name of the directory to move to.
     def move_down_directory(directory)
       if (!@course_id && valid_course?(directory)) || valid_folder?(directory)
-        @path.push(directory)
-        update_current_path
+        @state_manager.path.push(directory)
+        @state_manager.update_state_ids
       else
         puts "\e[31mWarning error thrown\e[0m: you listed a non existent directory (\e[31m#{directory}\e[0m)"
       end
@@ -146,7 +97,9 @@ module CarmenCargo
     def list_folder_names(folders)
       puts 'Folders:'
       folders.each do |folder|
-        puts "#{folder['id']} => #{folder['name']}"
+        folder_name = folder['name']
+
+        puts "#{folder['id']} => \e[36m#{folder_name}\e[0m"
       end
       puts
     end
@@ -157,9 +110,30 @@ module CarmenCargo
     def list_file_names(files)
       puts 'Files:'
       files.each do |file|
-        puts file['display_name']
+        file_name = file['display_name']
+
+        puts "\e[34m#{file_name}\e[0m"
       end
       puts
+    end
+
+    # Lists the names of the active courses.
+    def list_active_courses
+      list_folder_names(@data_fetcher.active_courses)
+    end
+
+    # Lists the contents of the current course.
+    # This includes both files and folders.
+    def list_course_contents
+      list_file_names(@data_fetcher.course_files(@state_manager.curr_course_id))
+      list_folder_names(@data_fetcher.course_folders(@state_manager.curr_course_id))
+    end
+
+    # Lists the contents of the current folder.
+    # This includes both files and child folders.
+    def list_folder_contents
+      list_file_names(@data_fetcher.folder_files(@state_manager.curr_folder_id))
+      list_folder_names(@data_fetcher.child_folders(@state_manager.curr_folder_id))
     end
 
     # Checks if the given directory is a valid course.
@@ -178,7 +152,7 @@ module CarmenCargo
     # @param directory [String] The directory to check.
     # @return [Boolean] Returns true if the directory is valid, false otherwise.
     def valid_folder?(directory)
-      course_folders = @data_fetcher.course_folders(@curr_course_id)
+      course_folders = @data_fetcher.course_folders(@state_manager.curr_course_id)
       course_folders.any? do |folder|
         folder['id'].to_s == directory
       end

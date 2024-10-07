@@ -137,7 +137,7 @@ ruby lib/data_fetcher.rb
 - Implemented APIClient class
 - Implemented DataFetcher class
 - Refactored CLI to connected frontend and backend with Thor commands
-- Implemented state management in CLI with json file
+- Implemented StateManagement class with json file
 - Added additional features like extension filtering and defaulting to downloads folder when downloading
 - Structured README
 
