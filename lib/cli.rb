@@ -1,395 +1,187 @@
 # frozen_string_literal: true
 
-require_relative 'user'
-require_relative 'api_client'
+require 'thor'
+require 'json'
 require_relative 'utils'
 require_relative 'data_fetcher'
-require 'zip'
+require_relative 'file_manager'
+require_relative 'user'
 
 module CarmenCargo
-  # class for handling command line issues
-  class CLI
-    # @return [Object] User for a given token
-    # @return [Object] api client for given url + token
-    # @return [Map] user information (thumbprint), contains name and student id
-    # @return [Map] course list for student to select class
-    attr_reader :user, :api_client, :thumbprint, :class_list
-
-    # Creates user and api objects as well as maps to user info and classes
-    def initialize
+  # CLI is a command-line interface for interacting with CarmenCargo.
+  # It provides commands for navigating and downloading files.
+  class CLI < Thor
+    # Initializes a new instance of the CLI class.
+    # It sets up a new DataFetcher instance and loads the state from a file if it exists.
+    # If the state file does not exist, it initializes the path, current course ID, and current folder ID to their
+    # default values.
+    def initialize(*args)
+      super
       @user = CarmenCargo::User.new
-      @api_client = CarmenCargo::APIClient.new('https://canvas.instructure.com/api/v1', user.token)
+      @data_fetcher = DataFetcher.new('https://canvas.instructure.com/api/v1', CarmenCargo::CANVAS_TOKEN)
+      @file_manager = FileManager.new
 
-      @thumbprint = user.make_thumbprint(@api_client)
-      @course_map = user.get_user_classes(@api_client)
+      load_state
     end
 
-    # Displays the welcome message and handles user choice for navigation
-    def start_program
-      puts "Hello #{@thumbprint[:name]}, #{File.read('resources/intro.txt')}"
-
-      actions = { -1 => -> { exit_program },
-                  -2 => -> { user.print_user_classes(@course_map) } }
-
-      loop do
-        puts 'Please enter the course ID you would like to download files from, or enter -1 to exit, or -2 to view classes.'
-        course = gets.chomp.to_i(16)
-        is_id = CarmenCargo.perform_action(actions, course)
-        get_class_files(course) if is_id
-      end
-    end
-
-    # compares course_num against @course_map, goes to create class specific call if true
-    #
-    # @param [int] a number in decimal form representing a course ID
-    def get_class_files(course_num)
-      if @course_map.value?(course_num)
-        # go download files
-        data_fetcher = CarmenCargo::DataFetcher.new('https://canvas.instructure.com/api/v1', user.token)
-        files = data_fetcher.course_files(course_num)
-
-        download_files(files) # Calls the method to handle file downloads
+    # Lists the contents of the current directory.
+    desc 'ls', 'List the contents in the current directory.'
+    def ls
+      if @path.empty?
+        list_folder_names(@data_fetcher.active_courses)
+      elsif @path.length == 1
+        list_file_names(@data_fetcher.course_files(@curr_course_id))
+        list_folder_names(@data_fetcher.course_folders(@curr_course_id))
       else
-        puts "the ID you entered is not one of the ones listed above.\n"
+        list_file_names(@data_fetcher.folder_files(@curr_folder_id))
+        list_folder_names(@data_fetcher.child_folders(@curr_folder_id))
       end
     end
 
-    # Prompt user for the output file path
-    def prompt_for_output_file_path
-      loop do
-        puts "\nEnter the output file path to save the downloaded file (or 'quit' to exit):"
-        path = gets.chomp
-
-        break if path.downcase == 'quit'
-
-        if valid_path?(path)
-          @output_path = path
-          puts "Output path set to: #{@output_path}"
-          break
-        else
-          puts 'Invalid path. Please try again.'
-        end
-      end
-    end
-
-    # Validate if the provided file path is valid
-    def valid_path?(path)
-      Dir.exist?(File.dirname(path))
-    end
-
-    # Downloads files from the given array of file hashes.
+    # Changes the current directory to the specified directory.
     #
-    # @param [Array<Hash>] files The array of file hashes to download.
-    def download_files(files)
-      files.each do |file|
-        # Logic for downloading file, e.g., save to a specific directory
-        puts "Downloading #{file['name']}..."
-        download_file(file)
-      end
-      puts 'Download completed.'
-    end
-
-    # Downloads a file from the given file hash.
-    #
-    # @param [Hash] file The file hash containing information for the download.
-    def download_file(file)
-      file_url = file['url'] # Adjust this key based on the API response
-      file_name = file['name']
-
-      uri = URI(file_url)
-      response = Net::HTTP.get_response(uri)
-
-      if response.is_a?(Net::HTTPSuccess)
-        File.open("downloads/#{file_name}", 'wb') do |f|
-          f.write(response.body)
-        end
-        puts "Downloaded #{file_name}."
+    # @param directory [String] The name of the directory to change to.
+    desc 'cd DIRECTORY', 'Change the current directory to DIRECTORY. Use ".." to move up one level, or "/" to go back to
+    the root.'
+    def cd(directory)
+      if directory == '/'
+        reset_state
+      elsif directory == '..'
+        move_up_directory
       else
-        puts "Failed to download #{file_name}: #{response.code} #{response.message}"
+        move_down_directory(directory)
       end
+      save_state
     end
 
-    # Zips the downloaded files and saves them in the downloads directory.
+    # Downloads the files in the current course or folder to a specified directory.
     #
-    # @param [Array<String>] files The array of file names to zip.
-    def zip_files(files)
-      zip_file_name = "downloads/#{Time.now.strftime('%Y%m%d%H%M%S')}_downloads.zip"
-
-      Zip::File.open(zip_file_name, Zip::File::CREATE) do |zipfile|
-        files.each do |file_name|
-          zipfile.add(file_name, "downloads/#{file_name}")
-        end
+    # @param output_directory [String] The directory to download the files to. Defaults to the user's downloads folder.
+    # @param types [Array<String>] The extensions of files to download.
+    # @return [void]
+    desc 'download [OUTPUT_DIRECTORY] [EXTENSIONS]', 'Download the files in the current course or folder to a specified
+    directory. If no directory is specified, files are downloaded to the default downloads folder. Optionally, specify
+    file extensions to filter which files are downloaded.'
+    def download(output_directory = @file_manager.downloads_folder, *extensions)
+      extensions = @file_manager.map_extension_to_mime_type(extensions)
+      files = []
+      if @curr_folder_id
+        files = @data_fetcher.folder_files(@curr_folder_id, extensions)
+      elsif @curr_course_id
+        files = @data_fetcher.course_files(@curr_course_id, extensions)
       end
 
-      show_zip_download_info(zip_file_name) # Show zip file download info
-    end
-
-    # Shows the user what files have been fetched
-    #
-    # @param fetched_files [Array<String>] The list of fetched files
-    def show_fetched_files(fetched_files)
-      puts 'Fetched Files:'
-      if fetched_files.empty?
-        puts 'No files have been fetched.'
-      else
-        fetched_files.each do |file|
-          puts "- #{file}"
-        end
-      end
-    end
-
-    # Shows user the name and file path of the downloaded zip
-    #
-    # @param zip_file_path [String] The path of the downloaded zip file
-    def show_zip_download_info(zip_file_path)
-      puts "Your files have been zipped and downloaded to: #{zip_file_path}"
-    end
-
-    # Checks the file type of a given file
-    #
-    # @param file_path [String] The path of the file to check
-    # @return [String, nil] The file type if valid, nil otherwise
-    def check_file_type(file_path)
-      if File.exist?(file_path)
-        file_extension = File.extname(file_path)
-        valid_extensions = ['.pdf', '.docx', '.pptx', '.txt', '.csv'] # Add valid file types as needed
-
-        return file_extension if valid_extensions.include?(file_extension)
-
-        puts "Invalid file type: #{file_extension}. Please select a valid file type."
-        nil
-
-      else
-        puts "File does not exist at: #{file_path}"
-        nil
-      end
-    end
-
-    # Exits the program with a goodbye message.
-    def exit_program
-      puts "It's been fun seeing you!"
-      exit
-    end
-
-    def show_courses
-      courses = @data_fetcher.active_courses
-      puts 'Active Courses:'
-      courses.each_with_index do |course, index|
-        puts "#{index + 1} - #{course['name']}"
-      end
-    rescue StandardError => e
-      puts "Error fetching courses: #{e.message}"
-    end
-
-    # Show a quick view of all files of chosen course
-    def show_course_files(course_id)
-      files = @data_fetcher.course_files(course_id)
-      puts 'Course files:'
-      files.each_with_index do |file, index|
-        puts "#{index + 1} - #{file['name']}"
-      end
-    rescue StandardError => e
-      puts "Error fetching course files: #{e.message}"
-    end
-
-    # Show a quick view of all course folders
-    def show_course_folders(course_id)
-      folders = @data_fetcher.course_folders(course_id)
-      puts 'Courses folders:'
-      folders.each_with_index do |folder, index|
-        puts "#{index + 1} - #{folder['name']}"
-      end
-    rescue StandardError => e
-      puts "Error fetching folders: #{e.message}"
-    end
-
-    # Show a quick view of all course folders
-    def show_user_folders
-      folders = @data_fetcher.all_folders
-      puts 'All folders:'
-      folders.each_with_index do |folder, index|
-        puts "#{index + 1} - #{folder['name']}"
-      end
-    rescue StandardError => e
-      puts "Error fetching all folders: #{e.message}"
-    end
-
-    # Show a quick view of all child files
-    def show_child_files(folder_id)
-      files = @data_fetcher.folder_files(folder_id)
-      puts 'All child files:'
-      files.each_with_index do |file, index|
-        puts "#{index + 1} - #{file['name']}"
-      end
-    rescue StandardError => e
-      puts "Error fetching files: #{e.message}"
-    end
-
-    # Prompt user to select a course.
-    # Loop until user choice is valid.
-    def prompt_user_for_course
-      loop do
-        puts "\nEnter the number of the course you want to view/download from (or 'quit' to exit):"
-        input = gets.chomp
-
-        break if input.downcase == 'quit' # if user wants to quit, break out
-
-        if valid_course_selection?(input)
-          @user_selection = input.to_i - 1
-          break
-        else
-          puts 'Invalid selection. Please try again.'
-        end
-      end
-    end
-
-    # Prompt user to select a course folder.
-    # Loop until user choice is valid.
-    def prompt_user_for_course_folder
-      loop do
-        puts "\nEnter the number of the folder you want to view/download from (or 'quit' to exit):"
-        input = gets.chomp
-
-        break if input.downcase == 'quit' # if user wants to quit, break out
-
-        if valid_course_folder_selection?(input)
-          @user_selection = input.to_i - 1
-          break
-        else
-          puts 'Invalid selection. Please try again.'
-        end
-      end
-    end
-
-    # Prompt user to select a course file.
-    # Loop until user choice is valid.
-    def prompt_user_for_course_file
-      loop do
-        puts "\nEnter the number of the file you want to view/download from (or 'quit' to exit):"
-        input = gets.chomp
-
-        break if input.downcase == 'quit' # if user wants to quit, break out
-
-        if valid_course_file_selection?(input)
-          @user_selection = input.to_i - 1
-          break
-        else
-          puts 'Invalid selection. Please try again.'
-        end
-      end
-    end
-
-    # Prompt user to select a user folder.
-    # Loop until user choice is valid.
-    def prompt_user_for_user_folder
-      loop do
-        puts "\nEnter the number of the user folder you want to view/download from (or 'quit' to exit):"
-        input = gets.chomp
-
-        break if input.downcase == 'quit' # if user wants to quit, break out
-
-        if valid_user_file_selection?(input)
-          @user_selection = input.to_i - 1
-          break
-        else
-          puts 'Invalid selection. Please try again.'
-        end
-      end
-    end
-
-    # Prompt user to select a folder file.
-    # Loop until user choice is valid.
-    def prompt_user_for_folder_file
-      loop do
-        puts "\nEnter the number of the folder file you want to view/download from (or 'quit' to exit):"
-        input = gets.chomp
-
-        break if input.downcase == 'quit' # if user wants to quit, break out
-
-        if valid_folder_file_selection?(input)
-          @user_selection = input.to_i - 1
-          break
-        else
-          puts 'Invalid selection. Please try again.'
-        end
-      end
-    end
-
-    # Prompt user to select a file type, if any
-    def prompt_for_file_type
-      loop do
-        puts "\nEnter the file type you want to download (e.g., all, pdf, docx) or 'quit' to exit:"
-        input = gets.chomp
-
-        break if input.downcase == 'quit'
-
-        if valid_file_type?(input) || input.downcase == 'all'
-          @file_type = input
-          break
-        else
-          puts 'Invalid file type. Please try again.'
-        end
-      end
-    end
-
-    # Download file from the selected course/folder
-    def download_file
-      if @user_selection.nil?
-        puts 'No valid course/folder selected. Cannot download.'
-        return
-      end
-
-      course_or_folder = @data_fetcher.fetch_course_or_folder(@user_selection)
-      files = course_or_folder['files'].select { |file| file['type'] == @file_type }
-
-      if files.empty?
-        puts "No files of type #{@file_type} found."
-        return
-      end
-
-      # Download files and save to the specified output path
-      files.each do |file|
-        content = @data_fetcher.download_file(file['url'])
-        File.write(File.join(@output_path, file['name']), content)
-        puts "Downloaded #{file['name']} to #{@output_path}"
-      rescue StandardError => e
-        puts "Error downloading file: #{e.message}"
-      end
+      @file_manager.download_multiple_files(@data_fetcher, files, output_directory)
     end
 
     private
 
-    # Check if the selected course option is valid
-    def valid_course_selection?(input)
-      input.to_i.positive? && input.to_i <= @data_fetcher.active_courses.size
+    # Loads the state from the 'state.json' file.
+    # If the file does not exist, initializes the state to its default values.
+    def load_state
+      if File.exist?('state.json')
+        state = JSON.parse(File.read('state.json'))
+        @path = state['path']
+        @curr_course_id = state['curr_course_id']
+        @curr_folder_id = state['curr_folder_id']
+      else
+        @path = []
+        @curr_course_id = nil
+        @curr_folder_id = nil
+      end
     end
 
-    # Check if the selected course folder option is valid
-    def valid_course_folder_selection?(input, course_id)
-      input.to_i.positive? && input.to_i <= @data_fetcher.course_folder(course_id).size
+    # Resets the state of the CLI.
+    def reset_state
+      @path = []
+      @curr_course_id = nil
+      @curr_folder_id = nil
+      save_state
     end
 
-    # Check if the selected file option is valid
-    def valid_course_file_selection?(input, course_id)
-      input.to_i.positive? && input.to_i <= @data_fetcher.course_files(course_id).size
+    # Saves the current state of the CLI to a file.
+    def save_state
+      state = {
+        'path' => @path,
+        'curr_course_id' => @curr_course_id,
+        'curr_folder_id' => @curr_folder_id
+      }
+      File.write('state.json', state.to_json)
     end
 
-    # Check if the selected user folder option is valid
-    def valid_user_folder_selection?(input)
-      input.to_i.positive? && input.to_i <= @data_fetcher.all_folders.size
+    # Updates the current path based on the state of the CLI.
+    def update_current_path
+      if @path.empty?
+        @curr_course_id = nil
+        @curr_folder_id = nil
+      elsif @path.length == 1
+        @curr_course_id = @path[0]
+        @curr_folder_id = nil
+      else
+        @curr_course_id = @path[0]
+        @curr_folder_id = @path[-1]
+      end
     end
 
-    # Check if the selected folder file option is valid
-    def valid_folder_file_selection?(input, folder_id)
-      input.to_i.positive? && input.to_i <= @data_fetcher.folder_files(folder_id).size
+    # Moves up one directory level by removing the last directory from the path.
+    def move_up_directory
+      @path.pop unless @path.empty?
     end
 
-    # Validate the file type (you could expand this with more logic)
-    def valid_file_type?(input)
-      %w[pdf docx txt].include?(input.downcase)
+    # Moves down to a new directory by adding it to the path.
+    #
+    # @param directory [String] The name of the directory to move to.
+    def move_down_directory(directory)
+      if (!@course_id && valid_course?(directory)) || valid_folder?(directory)
+        @path.push(directory)
+        update_current_path
+      else
+        puts "\e[31mWarning error thrown\e[0m: you listed a non existent directory (\e[31m#{directory}\e[0m)"
+      end
+    end
+
+    # Lists the names of the given folders.
+    #
+    # @param folders [Array<Hash>] The folders to list.
+    def list_folder_names(folders)
+      puts 'Folders:'
+      folders.each do |folder|
+        puts "#{folder['id']} => #{folder['name']}"
+      end
+      puts
+    end
+
+    # Lists the names of the given files.
+    #
+    # @param files [Array<Hash>] The files to list.
+    def list_file_names(files)
+      puts 'Files:'
+      files.each do |file|
+        puts file['display_name']
+      end
+      puts
+    end
+
+    # Checks if the given directory is a valid course.
+    #
+    # @param directory [String] The directory to check.
+    # @return [Boolean] Returns true if the directory is valid, false otherwise.
+    def valid_course?(directory)
+      active_courses = @data_fetcher.active_courses
+      active_courses.any? do |course|
+        course['id'].to_s == directory
+      end
+    end
+
+    # Checks if the given directory is a valid folder.
+    #
+    # @param directory [String] The directory to check.
+    # @return [Boolean] Returns true if the directory is valid, false otherwise.
+    def valid_folder?(directory)
+      course_folders = @data_fetcher.course_folders(@curr_course_id)
+      course_folders.any? do |folder|
+        folder['id'].to_s == directory
+      end
     end
   end
 end
-
-cli = CarmenCargo::CLI.new
-cli.start_program
