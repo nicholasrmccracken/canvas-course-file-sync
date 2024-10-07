@@ -60,8 +60,8 @@ module CarmenCargo
     # @param course_id [Integer] the ID of the course.
     # @param content_type [Array<String>] an array of content types to filter the files by.
     # @return [Array<Hash>] an array of hashes representing the files for the course.
-    def course_files(course_id, content_type = [])
-      params = { content_type: content_type }
+    def course_files(course_id, content_types = [])
+      params = { content_types: content_types }
       fetch_paginated_response("/courses/#{course_id}/files", { query: params })
     end
 
@@ -70,8 +70,8 @@ module CarmenCargo
     # @param folder_id [Integer] the ID of the folder.
     # @param content_type [Array<String>] an array of content types to filter the files by.
     # @return [Array<Hash>] an array of hashes representing the files for the folder.
-    def folder_files(folder_id, content_type = [])
-      params = { content_type: content_type }
+    def folder_files(folder_id, content_types = [])
+      params = { content_types: content_types }
       fetch_paginated_response("/folders/#{folder_id}/files", { query: params })
     end
 

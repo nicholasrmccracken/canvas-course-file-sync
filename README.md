@@ -63,10 +63,10 @@ Change the current directory. Use ".." to move up one level, or "/" to go back t
     ```
 
 3. **DOWNLOAD:**  
-Download the files in the current course or folder to a specified directory. If no directory is specified, files are downloaded to the default downloads folder. Optionally, specify file types to filter which files are downloaded.
+Download the files in the current course or folder to a specified directory. If no directory is specified, files are downloaded to the default downloads folder. Optionally, specify file extensions to filter which files are downloaded.
 
     ```bash
-    ./carmen_cargo.rb download [OUTPUT_DIRECTORY] [TYPES]
+    ./carmen_cargo.rb download [OUTPUT_DIRECTORY] [EXTENSIONS]
     ```
 
 To get the descriptions of each command programmatically, you can run CarmenCargo without any arguments:

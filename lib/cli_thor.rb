@@ -9,7 +9,6 @@ require_relative 'file_manager'
 module CarmenCargo
   # CLI is a command-line interface for interacting with CarmenCargo.
   # It provides commands for navigating and downloading files.
-
   class CLI < Thor
     # Initializes a new instance of the CLI class.
     # It sets up a new DataFetcher instance and loads the state from a file if it exists.
@@ -67,19 +66,19 @@ module CarmenCargo
 
     # Downloads the files in the current course or folder to a specified directory.
     #
-    # @param output_directory [String] The directory to download the files to. Defaults to the value of user's downloads
-    #   folder.
-    # @param types [Array<String>] The types of files to download.
+    # @param output_directory [String] The directory to download the files to. Defaults to the user's downloads folder.
+    # @param types [Array<String>] The extensions of files to download.
     # @return [void]
-    desc 'download [OUTPUT_DIRECTORY] [TYPES]', 'Download the files in the current course or folder to a specified
+    desc 'download [OUTPUT_DIRECTORY] [EXTENSIONS]', 'Download the files in the current course or folder to a specified
     directory. If no directory is specified, files are downloaded to the default downloads folder. Optionally, specify
-    file types to filter which files are downloaded.'
-    def download(output_directory = @file_manager.downloads_folder, *types)
+    file extensions to filter which files are downloaded.'
+    def download(output_directory = @file_manager.downloads_folder, *extensions)
+      extensions = @file_manager.map_extension_to_mime_type(extensions)
       files = []
       if @curr_folder_id
-        files = @data_fetcher.folder_files(@curr_folder_id, types)
+        files = @data_fetcher.folder_files(@curr_folder_id, extensions)
       elsif @curr_course_id
-        files = @data_fetcher.course_files(@curr_course_id, types)
+        files = @data_fetcher.course_files(@curr_course_id, extensions)
       end
 
       files.each do |file|
