@@ -12,7 +12,7 @@ A command-line tool that automates the download and organization of course files
 
 ## Installation
 
-1. **Install Ruby:**
+1. **Install Ruby:**  
 Install ruby v3.3.3. You can check your version with:
 
     ```bash
@@ -26,7 +26,14 @@ Install all required gems by running the following command:
     bundler install
     ```
 
-3. **Obtain API Token:**
+3. **Setup Permissions**  
+Ensure the script has the correct permissions to execute by running the following command:
+
+    ```bash
+    chmod +x carmen_cargo.rb
+    ```
+
+4. **Obtain API Token:**  
 First, create a copy of the ".env.template" file rename it ".env".  
 To utilize CarmenCargo, you must acquire a Canvas REST API access token. Follow these steps:
 
@@ -39,10 +46,33 @@ To utilize CarmenCargo, you must acquire a Canvas REST API access token. Follow 
 
 ## Usage
 
-To run CarmenCargo locally, use the following command:
+The CarmenCargo CLI tool has three commands:
+
+1. **LS:**  
+List the current files and folders.
+
+    ```bash
+    ./carmen_cargo.rb ls
+    ```
+
+2. **CD:**  
+Change the current directory. Use ".." to move up one level, or "/" to go back to the root.
+
+    ```bash
+    ./carmen_cargo.rb cd DIRECTORY
+    ```
+
+3. **DOWNLOAD:**  
+Download the files in the current course or folder to a specified directory. If no directory is specified, files are downloaded to the default downloads folder. Optionally, specify file types to filter which files are downloaded.
+
+    ```bash
+    ./carmen_cargo.rb download [OUTPUT_DIRECTORY] [TYPES]
+    ```
+
+To get the descriptions of each command programmatically, you can run CarmenCargo without any arguments:
 
 ```bash
-ruby carmen_cargo.rb
+./carmen_cargo.rb
 ```
 
 ## Contributing
@@ -68,6 +98,13 @@ ruby carmen_cargo.rb
 - Subject lines should be capitalized, not end in a period, and be written in an imperative mood.
   - 'Add', 'Implement', 'Fix'
 - Body copy must only contain what and why explanations, never how. The how should be in documentation.
+
+**Yard Documenation**:
+To view yard documentation in html form:
+```bash
+yard doc
+open doc/index.html
+```
 
 ## Individual Contributions
 
